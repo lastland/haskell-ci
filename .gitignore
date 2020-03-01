@@ -1,0 +1,4 @@
+.stack-work/
+haskell-ci.cabal
+*~
+stack.yaml.lock
