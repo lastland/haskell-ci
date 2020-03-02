@@ -11,7 +11,7 @@ import Data.Sequence
 -- Concise Data Access", with slight modification.
 
 data Blocks f =
-  forall a . Blocks (f a) (IORef a)
+  forall a . Blocks (f a) (IORef (Maybe a))
 
 newtype Cont f a = Cont { runCont :: IO (Resumption f a) }
   deriving Functor
@@ -44,3 +44,13 @@ instance Monad (Cont f) where
     case x' of
       Done a       -> runCont $ k a
       Blocked a k' -> return $ Blocked a (k' >>= k)
+
+lift :: f a -> Cont f a
+lift f = Cont $ do
+  box <- newIORef $ Nothing
+  let bl   = Blocks f box
+  let cont = Cont $ do
+        Just a <- readIORef box
+        return (Done a)
+  return (Blocked (singleton bl) cont)
+                

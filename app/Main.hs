@@ -1,4 +1,13 @@
 module Main where
 
+import Control.Lens
+
+import BuildConfig
+import WorkflowConfig
+import Example
+
 main :: IO ()
-main = putStrLn "not yet"
+main = do
+  w <- buildWorkflowConfig workflow
+  putStrLn $ show w
+  putStrLn $ show $ length $ w ^. jobs

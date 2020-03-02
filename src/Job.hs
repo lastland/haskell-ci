@@ -7,11 +7,12 @@
 module Job where
 
 import Control.Lens
-import Control.Monad.Freer
 
+import Freer
 import Persistance
 
 data Executor = Docker | Machine | MacOS
+  deriving Show
 
 data Step :: * -> * where
   Run :: String -> Step ()
@@ -19,9 +20,9 @@ data Step :: * -> * where
   SaveCache :: String -> [String] -> Step ()
   RestoreCache :: String -> Step ()
   PersistToWorkspace :: Workspace -> Step PersistanceHandle
-  AttachWorkspace :: PersistanceHandle -> Step ()
+  AttachWorkspace :: PersistanceHandle -> Step Workspace
 
-type Steps a = Eff '[Step] a
+type Steps a = Freer Step a
 
 runStep :: String -> Steps ()
 runStep = send . Run
@@ -38,9 +39,8 @@ restoreCache = send . RestoreCache
 persistToWorkspace :: Workspace -> Steps PersistanceHandle
 persistToWorkspace = send . PersistToWorkspace
 
-attachWorkspace :: PersistanceHandle -> Steps ()
+attachWorkspace :: PersistanceHandle -> Steps Workspace
 attachWorkspace = send . AttachWorkspace
-
 
 data Job a = Job {
   _name :: String,
