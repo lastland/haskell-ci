@@ -3,7 +3,7 @@ module JobConfig where
 
 import Control.Lens
 
-import Job
+import Executor
 
 data StepConfig
   = Run String
