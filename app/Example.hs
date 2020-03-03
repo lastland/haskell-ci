@@ -26,19 +26,29 @@ job2 = Job "job2" doc js2
           runStep "echo 'Hello Universe' > file2.txt"
           persistToWorkspace (Workspace "." ["file2.txt"])
           
-
-job3 :: PersistanceHandle -> PersistanceHandle -> Job ()
+job3 :: PersistanceHandle -> PersistanceHandle -> Job DependencyToken
 job3 p1 p2 = Job "job3" doc $ js3
   where js3 = do
           w1 <- attachWorkspace p1
           w2 <- attachWorkspace p2
           let allfiles = w1 ^. paths <> w2 ^. paths
-          traverse (\p -> runStep $ "cat " ++ p) allfiles
-          return ()
+          _ <- traverse (\p -> runStep $ "cat " ++ p) allfiles
+          createDependency
+
+job4 :: Job ()
+job4 = Job "job4" doc $ do
+  runStep "echo 'Hello A!'"
+
+job5 :: DependencyToken -> Job ()
+job5 _ = Job "job5" doc $ do
+  runStep "echo 'Hello B!'"
+  
 
 workflow :: Workflow ()
 workflow = Workflow "mywork" js
   where js = do
           p1 <- lift job1
           p2 <- lift job2
-          lift $ job3 p1 p2
+          t <- lift $ job3 p1 p2
+          lift $ job4
+          lift $ job5 t
